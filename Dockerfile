@@ -1,5 +1,5 @@
 FROM alpine:edge
-MAINTAINER Paul Smith <pa.ulsmith.net>
+MAINTAINER Nilton OS <jniltinho@gmail.com>
 
 # Add repos
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
@@ -9,7 +9,7 @@ RUN apk update && apk upgrade && apk add \
 	bash apache2 php7-apache2 curl ca-certificates openssl openssh git php7 php7-phar php7-json php7-iconv php7-openssl tzdata openntpd nano
 
 # Add Composer
-RUN curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Setup apache and php
 RUN apk add \
@@ -43,6 +43,7 @@ RUN apk add \
 	php7-ctype \
 	php7-session \
 	php7-redis \
+	php7-memcached \
 	php7-exif \
 	php7-intl \
 	php7-fileinfo \
@@ -57,17 +58,14 @@ RUN cp /usr/bin/php7 /usr/bin/php \
 
 # Add apache to run and configure
 RUN sed -i "s/#LoadModule\ rewrite_module/LoadModule\ rewrite_module/" /etc/apache2/httpd.conf \
-    && sed -i "s/#LoadModule\ session_module/LoadModule\ session_module/" /etc/apache2/httpd.conf \
-    && sed -i "s/#LoadModule\ session_cookie_module/LoadModule\ session_cookie_module/" /etc/apache2/httpd.conf \
-    && sed -i "s/#LoadModule\ session_crypto_module/LoadModule\ session_crypto_module/" /etc/apache2/httpd.conf \
-    && sed -i "s/#LoadModule\ deflate_module/LoadModule\ deflate_module/" /etc/apache2/httpd.conf \
-    && sed -i "s#^DocumentRoot \".*#DocumentRoot \"/app/public\"#g" /etc/apache2/httpd.conf \
-    && sed -i "s#/var/www/localhost/htdocs#/app/public#" /etc/apache2/httpd.conf \
-    && printf "\n<Directory \"/app/public\">\n\tAllowOverride All\n</Directory>\n" >> /etc/apache2/httpd.conf
+    && sed -i "s/#LoadModule\ unique_id_module/LoadModule\ unique_id_module/" /etc/apache2/httpd.conf \
+    && sed -i "s#^DocumentRoot \".*#DocumentRoot \"/var/www/html\"#g" /etc/apache2/httpd.conf \
+    && sed -i "s#/var/www/localhost/htdocs#/var/www/html#" /etc/apache2/httpd.conf \
+    && printf "\n<Directory \"/var/www/html\">\n\tAllowOverride All\n</Directory>\n" >> /etc/apache2/httpd.conf
 
-RUN mkdir /app && mkdir /app/public && chown -R apache:apache /app && chmod -R 755 /app && mkdir bootstrap
-ADD start.sh /bootstrap/
-RUN chmod +x /bootstrap/start.sh
+
+RUN chown -R apache:apche /var/www/html
 
 EXPOSE 80
-ENTRYPOINT ["/bootstrap/start.sh"]
+CMD ["/usr/sbin/httpd", "-D", "FOREGROUND"]
+
