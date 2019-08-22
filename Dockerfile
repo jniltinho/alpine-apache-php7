@@ -62,7 +62,11 @@ RUN sed -i "s/#LoadModule\ rewrite_module/LoadModule\ rewrite_module/" /etc/apac
     && printf "\n<Directory \"/var/www/html\">\n\tAllowOverride All\n</Directory>\n" >> /etc/apache2/httpd.conf
 
 
-RUN chown -R apache:apche /var/www/html
+RUN addgroup -g 82 -S www-data && adduser -u 82 -D -S -G www-data www-data \
+    && addgroup apache www-data \
+    && chown www-data:www-data /var/www/html \
+    && chmod 777 /var/www/html
+
 
 EXPOSE 80
 CMD ["/usr/sbin/httpd", "-D", "FOREGROUND"]
