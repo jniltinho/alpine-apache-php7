@@ -1,18 +1,16 @@
-FROM alpine:edge
+FROM alpine:3.10
 MAINTAINER Nilton OS <jniltinho@gmail.com>
 
-# Add repos
-RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 
 # Add basics first
-RUN apk update && apk upgrade && apk add \
-	bash apache2 php7-apache2 curl ca-certificates openssl openssh git php7 php7-phar php7-json php7-iconv php7-openssl tzdata openntpd nano
+RUN apk update \
+    && apk add --no-cache bash apache2 php7-apache2 curl ca-certificates openssl openssh git php7 php7-phar php7-json php7-iconv php7-openssl tzdata
 
 # Add Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Setup apache and php
-RUN apk add \
+RUN apk add --no-cache \
 	php7-ftp \
 	php7-xdebug \
 	php7-mcrypt \
